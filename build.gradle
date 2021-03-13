@@ -15,7 +15,7 @@ dependencies {
 
     implementation 'org.slf4j:slf4j-simple:1.7.30'
 
-    implementation 'io.r2dbc:r2dbc-spi:0.8.3.RELEASE'
+    implementation 'io.r2dbc:r2dbc-spi:0.8.4.RELEASE'
     implementation 'io.r2dbc:r2dbc-postgresql:0.8.6.RELEASE'
 
     implementation 'net.time4j:time4j-base:5.7'
