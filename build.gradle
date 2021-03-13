@@ -20,7 +20,7 @@ dependencies {
 
     implementation 'net.time4j:time4j-base:5.7'
     implementation 'net.time4j:time4j-sqlxml:5.7'
-    implementation 'net.time4j:time4j-tzdata:5.0-2020a'
+    implementation 'net.time4j:time4j-tzdata:5.0-2021a'
 
     implementation 'net.iakovlev:timeshape:2020d.11'
 
