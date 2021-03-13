@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key="no_timezone">{0} has not registered a timezone.</entry>
+    <entry key="time">Time for {0}: {1}</entry>
+</properties>
