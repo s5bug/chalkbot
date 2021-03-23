@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key="command.ping.pong">ポン！</entry>
+    <entry key="command.time.time_for_user">{0}の現在時刻：{1}</entry>
+    <entry key="error.no_timezone_registered">{0}はまだタイムゾーンを設定していません。</entry>
+</properties>

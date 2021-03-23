@@ -5,18 +5,11 @@ import discord4j.core.object.entity.Message;
 import reactor.core.publisher.Mono;
 import tf.bug.chalkbot.ChalkBotClient;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class CommandPing implements Command {
 
-    private Map<Locale, ResourceBundle> pingMessages;
-
-    private CommandPing() {
-        this.pingMessages = new HashMap<>();
-    }
+    private CommandPing() {}
 
     private static CommandPing instance;
 
@@ -45,16 +38,12 @@ public class CommandPing implements Command {
 
     @Override
     public <T> Mono<T> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
-        Locale strippedLocale = userLocale.stripExtensions();
-        ResourceBundle bundle =
-            pingMessages.computeIfAbsent(
-                strippedLocale,
-                (l) -> ResourceBundle.getBundle("command_ping", l, client.getResourceBundleControl())
-            );
+        Optional<String> response = client.getLangKeyHandler().format(userLocale, "command.ping.pong");
 
-        String response = bundle.getString("pong");
+        // TODO handle missing key errors
+        String respText = response.orElse("command.ping.pong");
 
-        return mce.getMessage().getChannel().flatMap(c -> c.createMessage(response)).then(Mono.empty());
+        return mce.getMessage().getChannel().flatMap(c -> c.createMessage(respText)).then(Mono.empty());
     }
 
 }

@@ -1,6 +1,7 @@
 package tf.bug.chalkbot;
 
 import discord4j.core.DiscordClient;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
@@ -37,10 +38,9 @@ public class ChalkBot {
             dbUsername,
             dbPassword,
             dbDatabase
-        ).flatMap(db -> {
-            ChalkBotClient client = new ChalkBotClient(token, db);
-
-            return client.getClient().withGateway(gateway -> {
+        ).flatMap(db ->
+            ChalkBotClient.create(token, db).flatMap(client -> {
+                GatewayDiscordClient gateway = client.getClient();
                 Publisher<?> handleGuildCreation =
                     gateway.on(GuildCreateEvent.class)
                         .flatMap(gce -> client.handleGuildCreation(gateway, gce));
@@ -49,9 +49,8 @@ public class ChalkBot {
                     gateway.on(MessageCreateEvent.class)
                         .flatMap(mce -> client.handleMessageCreation(gateway, mce));
 
-                return Mono.when(handleGuildCreation, ping);
-            });
-        }).block();
+            return Mono.when(handleGuildCreation, ping);
+        })).block();
     }
 
 }

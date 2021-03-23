@@ -2,11 +2,13 @@ package tf.bug.chalkbot.commands;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import net.time4j.Moment;
 import net.time4j.format.DisplayMode;
 import net.time4j.format.expert.ChronoFormatter;
 import net.time4j.tz.Timezone;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tf.bug.chalkbot.ChalkBotClient;
 import tf.bug.chalkbot.ChalkBotDB;
@@ -16,11 +18,7 @@ import java.util.*;
 
 public class CommandTime implements Command {
 
-    private Map<Locale, ResourceBundle> timeMessages;
-
-    private CommandTime() {
-        timeMessages = new HashMap<>();
-    }
+    private CommandTime() {}
 
     private static CommandTime instance;
 
@@ -49,46 +47,115 @@ public class CommandTime implements Command {
 
     @Override
     public <T> Mono<T> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
-        Locale strippedLocale = userLocale.stripExtensions();
-        ResourceBundle bundle =
-            timeMessages.computeIfAbsent(
-                strippedLocale,
-                (l) -> ResourceBundle.getBundle("command_time", l, client.getResourceBundleControl())
-            );
-
-        User timeToGet = mce.getMessage().getAuthor().get();
-        if(!arguments.isEmpty()) {
-            // TODO support resolving users
-        }
-
-        ChalkBotDB db = client.getDb();
-
-        Mono<Optional<Timezone>> tz =
-            db.timeZone(timeToGet.getId().asBigInteger()).map(Optional::of).last(Optional.empty());
-
-        return tz.flatMap(tzo -> {
-            if(tzo.isPresent()) {
-                String message = bundle.getString("time");
-                Timezone tzr = tzo.get();
-
-                ChronoFormatter<Moment> f =
-                    ChronoFormatter.ofMomentStyle(DisplayMode.FULL, DisplayMode.FULL, userLocale, tzr.getID());
-
-                Moment now = Moment.nowInSystemTime();
-
-                String format = f.format(now);
-
-                String result = MessageFormat.format(message, timeToGet.getUsername(), format);
-
-                return mce.getMessage().getChannel().flatMap(c -> c.createMessage(result));
+        return mce.getMessage().getChannel().flatMap(c -> {
+            Mono<ChalkBotClient.MemberQueryResponse> target;
+            if(arguments.isEmpty()) {
+                Mono<Optional<Member>> member =
+                    mce.getMessage().getAuthorAsMember().map(Optional::of).defaultIfEmpty(Optional.empty());
+                target = member.map(o -> {
+                    if(o.isPresent()) {
+                        return new ChalkBotClient.MemberQueryResponse.Member(o.get());
+                    } else {
+                        Optional<User> user =
+                            mce.getMessage().getAuthor();
+                        if(user.isPresent()) {
+                            return new ChalkBotClient.MemberQueryResponse.User(user.get());
+                        } else {
+                            return new ChalkBotClient.MemberQueryResponse.Empty();
+                        }
+                    }
+                });
             } else {
-                String message = bundle.getString("no_timezone");
-
-                // TODO make a system for referring to a user
-                String result = MessageFormat.format(message, timeToGet.getUsername());
-
-                return mce.getMessage().getChannel().flatMap(c -> c.createMessage(result));
+                target = mce.getGuild().map(Optional::of).defaultIfEmpty(Optional.empty()).flatMap(g -> {
+                    return client.queryMember(arguments, g);
+                });
             }
-        }).then(Mono.empty());
+
+            return target.flatMap(mqr -> {
+                if(mqr instanceof ChalkBotClient.MemberQueryResponse.Member) {
+                    Member targetMember = ((ChalkBotClient.MemberQueryResponse.Member) mqr).member();
+
+                    Flux<Timezone> tzs = client.getDb().timeZone(targetMember.getId().asBigInteger());
+                    Mono<Optional<Timezone>> tz =
+                        tzs.map(Optional::of).single(Optional.empty());
+
+                    return tz.flatMap(tzr -> {
+                        if(tzr.isEmpty()) {
+                            Optional<String> omsg =
+                                client.getLangKeyHandler().format(userLocale, "error.no_timezone_registered", targetMember.getDisplayName());
+
+                            // TODO missing key handling
+                            String msg = omsg.orElse("error.no_timezone_registered");
+
+                            return c.createMessage(msg).then(Mono.empty());
+                        } else {
+                            Timezone tzi = tzr.get();
+
+                            ChronoFormatter<Moment> f =
+                                ChronoFormatter.ofMomentStyle(DisplayMode.FULL, DisplayMode.FULL, userLocale, tzi.getID());
+
+                            Moment now = Moment.nowInSystemTime();
+
+                            String format = f.format(now);
+
+                            Optional<String> omsg =
+                                client.getLangKeyHandler().format(userLocale, "command.time.time_for_user", targetMember.getDisplayName(), format);
+
+                            // TODO missing key handling
+                            String msg = omsg.orElse("command.time.time_for_user");
+
+                            return c.createMessage(msg).then(Mono.empty());
+                        }
+                    });
+                } else if(mqr instanceof ChalkBotClient.MemberQueryResponse.User) {
+                    User targetUser = ((ChalkBotClient.MemberQueryResponse.User) mqr).user();
+
+                    Flux<Timezone> tzs = client.getDb().timeZone(targetUser.getId().asBigInteger());
+                    Mono<Optional<Timezone>> tz =
+                        tzs.map(Optional::of).single(Optional.empty());
+
+                    return tz.flatMap(tzr -> {
+                        if(tzr.isEmpty()) {
+                            Optional<String> omsg =
+                                client.getLangKeyHandler().format(userLocale, "error.no_timezone_registered", targetUser.getTag());
+
+                            // TODO missing key handling
+                            String msg = omsg.orElse("error.no_timezone_registered");
+
+                            return c.createMessage(msg).then(Mono.empty());
+                        } else {
+                            Timezone tzi = tzr.get();
+
+                            ChronoFormatter<Moment> f =
+                                ChronoFormatter.ofMomentStyle(DisplayMode.FULL, DisplayMode.FULL, userLocale, tzi.getID());
+
+                            Moment now = Moment.nowInSystemTime();
+
+                            String format = f.format(now);
+
+                            Optional<String> omsg =
+                                client.getLangKeyHandler().format(userLocale, "command.time.time_for_user", targetUser.getTag(), format);
+
+                            // TODO missing key handling
+                            String msg = omsg.orElse("command.time.time_for_user");
+
+                            return c.createMessage(msg).then(Mono.empty());
+                        }
+                    });
+                } else {
+                    if(!arguments.isEmpty()) {
+                        Optional<String> omsg =
+                            client.getLangKeyHandler().format(userLocale, "error.unknown_user", arguments);
+
+                        // TODO missing key handling
+                        String msg = omsg.orElse("error.unknown_user");
+
+                        return c.createMessage(msg).then(Mono.empty());
+                    } else {
+                        return Mono.empty();
+                    }
+                }
+            });
+        });
     }
 }

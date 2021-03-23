@@ -6,6 +6,22 @@ plugins {
 group 'tf.bug'
 version '0.1.0'
 
+compileJava {
+    sourceCompatibility = 15
+}
+
+tasks.withType(JavaCompile).all {
+    options.compilerArgs += '--enable-preview'
+}
+
+tasks.withType(Test).all {
+    jvmArgs += '--enable-preview'
+}
+
+tasks.withType(JavaExec).all {
+    jvmArgs += '--enable-preview'
+}
+
 repositories {
     mavenCentral()
 }
