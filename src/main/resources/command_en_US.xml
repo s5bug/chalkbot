@@ -3,4 +3,6 @@
 <properties>
     <entry key="ping">ping</entry>
     <entry key="time">time</entry>
+    <entry key="timezone">timezone</entry>
+    <entry key="set">set</entry>
 </properties>

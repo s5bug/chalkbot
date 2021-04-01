@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigInteger;
 import java.time.ZoneId;
 import java.util.Locale;
+import java.util.Optional;
 
 public class ChalkBotDB {
 
@@ -56,7 +57,7 @@ public class ChalkBotDB {
             .then();
     }
 
-    public Flux<String> prefixes(BigInteger guildId) {
+    public Flux<String> getPrefixes(BigInteger guildId) {
         return connection
             .createStatement("SELECT prefixes FROM guilds WHERE id = $1")
             .bind("$1", guildId)
@@ -65,22 +66,56 @@ public class ChalkBotDB {
             .flatMap(Flux::fromArray);
     }
 
-    public Flux<Timezone> timeZone(BigInteger userId) {
+    public Mono<Optional<Timezone>> getTimezone(BigInteger userId) {
         return connection
             .createStatement("SELECT timezone FROM users WHERE id = $1")
             .bind("$1", userId)
             .execute()
             .flatMap(result -> result.map((row, m) -> row.get("timezone", String.class)))
-            .map(Timezone::of);
+            .map(Timezone::of)
+            .map(Optional::of)
+            .single(Optional.empty());
     }
 
-    public Flux<Locale> locale(BigInteger userId) {
+    public Mono<Void> setTimezone(BigInteger userId, Timezone tz) {
+        return connection
+            .createStatement("""
+                INSERT INTO users (id, timezone)
+                VALUES ($1, $2)
+                ON CONFLICT (id) DO UPDATE
+                    SET timezone = excluded.timezone
+                """)
+            .bind("$1", userId)
+            .bind("$2", tz.getID().canonical())
+            .execute()
+            .flatMap(PostgresqlResult::getRowsUpdated)
+            .then();
+    }
+
+    public Mono<Optional<Locale>> getLocale(BigInteger userId) {
         return connection
             .createStatement("SELECT language FROM users WHERE id = $1")
             .bind("$1", userId)
             .execute()
             .flatMap(result -> result.map((row, m) -> row.get("language", String.class)))
-            .map(Locale::forLanguageTag);
+            .map(Locale::forLanguageTag)
+            .map(Optional::of)
+            .single(Optional.empty());
+    }
+
+    public Mono<Void> setLocale(BigInteger userId, Locale locale) {
+        return connection
+            .createStatement("""
+                INSERT INTO users (id, language)
+                VALUES ($1, $2)
+                ON CONFLICT (id) DO UPDATE
+                    SET language = excluded.language
+                """)
+            .bind("$1", userId)
+            .bind("$2", locale.toLanguageTag())
+            .execute()
+            .flatMap(PostgresqlResult::getRowsUpdated)
+            .then();
     }
 
 }

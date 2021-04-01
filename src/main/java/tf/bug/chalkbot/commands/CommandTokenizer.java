@@ -26,7 +26,7 @@ public class CommandTokenizer {
         this.loadedLocales = new HashMap<>();
     }
 
-    public <T> Mono<T> run(MessageCreateEvent mce, Locale userLocale, String input) {
+    public Mono<Void> run(MessageCreateEvent mce, Locale userLocale, String input) {
         Locale strippedLocale = userLocale.stripExtensions();
         Map<String, String> tokens =
             loadedLocales.computeIfAbsent(strippedLocale, (l) -> {

@@ -16,6 +16,7 @@ public class CommandRoot implements Command {
         this.subCommands = new HashMap<>();
         this.subCommands.put("ping", CommandPing.getInstance());
         this.subCommands.put("time", CommandTime.getInstance());
+        this.subCommands.put("timezone", CommandTimezone.getInstance());
     }
 
     private static CommandRoot instance;
@@ -39,12 +40,12 @@ public class CommandRoot implements Command {
     }
 
     @Override
-    public Command getSubCommand(String subCommandName) {
-        return subCommands.get(subCommandName);
+    public Command getSubCommand(String subCommandToken) {
+        return subCommands.get(subCommandToken);
     }
 
     @Override
-    public <T> Mono<T> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
+    public Mono<Void> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
         return Mono.empty();
     }
 

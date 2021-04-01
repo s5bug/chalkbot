@@ -8,15 +8,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
-import discord4j.core.object.entity.channel.Channel;
 import net.iakovlev.timeshape.TimeZoneEngine;
-import net.time4j.Moment;
-import net.time4j.PlainTimestamp;
-import net.time4j.format.DisplayMode;
-import net.time4j.format.expert.ChronoFormatter;
-import net.time4j.tz.NameStyle;
-import net.time4j.tz.TZID;
-import net.time4j.tz.Timezone;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,13 +18,13 @@ import tf.bug.chalkbot.commands.CommandTokenizer;
 import tf.bug.chalkbot.i18n.LangKeyHandler;
 import tf.bug.chalkbot.i18n.XMLResourceBundleControl;
 import tf.bug.chalkbot.overpass.OverpassClient;
-import tf.bug.chalkbot.overpass.OverpassResponse;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChalkBotClient {
 
@@ -80,6 +72,14 @@ public class ChalkBotClient {
         return this.langKeyHandler;
     }
 
+    public OverpassClient getOverpassClient() {
+        return this.overpassClient;
+    }
+
+    public TimeZoneEngine getTimeZoneEngine() {
+        return this.timeZoneEngine;
+    }
+
     public Publisher<?> handleGuildCreation(GatewayDiscordClient me, GuildCreateEvent gce) {
         return db.createGuild(gce.getGuild().getId().asBigInteger());
     }
@@ -111,7 +111,7 @@ public class ChalkBotClient {
 
         return rest.flatMap(str -> {
             BigInteger userId = mce.getMessage().getAuthor().get().getId().asBigInteger();
-            Mono<Locale> locale = db.locale(userId).last(Locale.US);
+            Mono<Locale> locale = db.getLocale(userId).map(o -> o.orElse(Locale.US));
             return locale.flatMap(rlocale -> this.commandTokenizer.run(mce, rlocale, str));
         });
     }
@@ -120,40 +120,74 @@ public class ChalkBotClient {
         Flux<String> prefixes;
         if(guildId.isPresent()) {
             BigInteger gid = guildId.get().asBigInteger();
-            prefixes = db.prefixes(gid);
+            prefixes = db.getPrefixes(gid);
         } else {
             prefixes = Flux.just("c!");
         }
         return prefixes;
     }
 
+    private static final Pattern MENTION_PATTERN =
+        Pattern.compile("^<@!?(\\d+)>$");
+
     public Mono<MemberQueryResponse> queryMember(
         String query,
         Optional<Guild> guild
     ) {
-        Flux<User> userMatching = client.getUsers().filter(p -> query.equals(p.getUsername()));
-        Mono<Optional<User>> singleUser = userMatching.map(Optional::of).single(Optional.empty());
-        Mono<MemberQueryResponse> userResp = singleUser.map(uo -> {
-            if(uo.isPresent()) {
-                return new MemberQueryResponse.User(uo.get());
-            } else {
-                return new MemberQueryResponse.Empty();
-            }
-        });
+        Matcher mentionMatcher = MENTION_PATTERN.matcher(query.trim());
+        if(mentionMatcher.matches()) {
+            BigInteger id = new BigInteger(mentionMatcher.group(1));
+            Snowflake snowflake = Snowflake.of(id);
 
-        if(guild.isPresent()) {
-            Flux<Member> matching = client.getGuildMembers(guild.get().getId()).filter(p -> query.equals(p.getDisplayName()));
-            Mono<Optional<Member>> memberResult = matching.map(Optional::of).single(Optional.empty());
-
-            return memberResult.flatMap(mo -> {
-               if(mo.isPresent()) {
-                   return Mono.just(new MemberQueryResponse.Member(mo.get()));
-               } else {
-                   return userResp;
-               }
+            Mono<Optional<User>> getUser =
+                client.getUserById(snowflake).map(Optional::of).defaultIfEmpty(Optional.empty());
+            Mono<MemberQueryResponse> userResp = getUser.map(uo -> {
+                if (uo.isPresent()) {
+                    return new MemberQueryResponse.User(uo.get());
+                } else {
+                    return new MemberQueryResponse.Empty();
+                }
             });
+
+            if(guild.isPresent()) {
+                Mono<Optional<Member>> getMember =
+                    guild.get().getMemberById(Snowflake.of(id)).map(Optional::of).defaultIfEmpty(Optional.empty());
+
+                return getMember.flatMap(mo -> {
+                    if (mo.isPresent()) {
+                        return Mono.just(new MemberQueryResponse.Member(mo.get()));
+                    } else {
+                        return userResp;
+                    }
+                });
+            } else {
+                return userResp;
+            }
         } else {
-            return userResp;
+            Flux<User> userMatching = client.getUsers().filter(p -> query.equals(p.getUsername()));
+            Mono<Optional<User>> singleUser = userMatching.map(Optional::of).single(Optional.empty());
+            Mono<MemberQueryResponse> userResp = singleUser.map(uo -> {
+                if (uo.isPresent()) {
+                    return new MemberQueryResponse.User(uo.get());
+                } else {
+                    return new MemberQueryResponse.Empty();
+                }
+            });
+
+            if (guild.isPresent()) {
+                Flux<Member> matching = client.getGuildMembers(guild.get().getId()).filter(p -> query.equals(p.getDisplayName()));
+                Mono<Optional<Member>> memberResult = matching.map(Optional::of).single(Optional.empty());
+
+                return memberResult.flatMap(mo -> {
+                    if (mo.isPresent()) {
+                        return Mono.just(new MemberQueryResponse.Member(mo.get()));
+                    } else {
+                        return userResp;
+                    }
+                });
+            } else {
+                return userResp;
+            }
         }
     }
 

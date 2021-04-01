@@ -10,8 +10,8 @@ public interface Command {
 
     boolean hasSubCommands();
     boolean hasSubCommand(String subCommandToken);
-    Command getSubCommand(String subCommandName);
+    Command getSubCommand(String subCommandToken);
 
-    <T> Mono<T> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments);
+    Mono<Void> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments);
 
 }

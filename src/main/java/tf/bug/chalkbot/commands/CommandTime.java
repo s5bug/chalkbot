@@ -1,7 +1,6 @@
 package tf.bug.chalkbot.commands;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import net.time4j.Moment;
@@ -11,9 +10,7 @@ import net.time4j.tz.Timezone;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tf.bug.chalkbot.ChalkBotClient;
-import tf.bug.chalkbot.ChalkBotDB;
 
-import java.text.MessageFormat;
 import java.util.*;
 
 public class CommandTime implements Command {
@@ -41,12 +38,12 @@ public class CommandTime implements Command {
     }
 
     @Override
-    public Command getSubCommand(String subCommandName) {
+    public Command getSubCommand(String subCommandToken) {
         return null;
     }
 
     @Override
-    public <T> Mono<T> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
+    public Mono<Void> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
         return mce.getMessage().getChannel().flatMap(c -> {
             Mono<ChalkBotClient.MemberQueryResponse> target;
             if(arguments.isEmpty()) {
@@ -75,9 +72,7 @@ public class CommandTime implements Command {
                 if(mqr instanceof ChalkBotClient.MemberQueryResponse.Member) {
                     Member targetMember = ((ChalkBotClient.MemberQueryResponse.Member) mqr).member();
 
-                    Flux<Timezone> tzs = client.getDb().timeZone(targetMember.getId().asBigInteger());
-                    Mono<Optional<Timezone>> tz =
-                        tzs.map(Optional::of).single(Optional.empty());
+                    Mono<Optional<Timezone>> tz = client.getDb().getTimezone(targetMember.getId().asBigInteger());
 
                     return tz.flatMap(tzr -> {
                         if(tzr.isEmpty()) {
@@ -87,7 +82,7 @@ public class CommandTime implements Command {
                             // TODO missing key handling
                             String msg = omsg.orElse("error.no_timezone_registered");
 
-                            return c.createMessage(msg).then(Mono.empty());
+                            return c.createMessage(msg).then();
                         } else {
                             Timezone tzi = tzr.get();
 
@@ -104,15 +99,13 @@ public class CommandTime implements Command {
                             // TODO missing key handling
                             String msg = omsg.orElse("command.time.time_for_user");
 
-                            return c.createMessage(msg).then(Mono.empty());
+                            return c.createMessage(msg).then();
                         }
                     });
                 } else if(mqr instanceof ChalkBotClient.MemberQueryResponse.User) {
                     User targetUser = ((ChalkBotClient.MemberQueryResponse.User) mqr).user();
 
-                    Flux<Timezone> tzs = client.getDb().timeZone(targetUser.getId().asBigInteger());
-                    Mono<Optional<Timezone>> tz =
-                        tzs.map(Optional::of).single(Optional.empty());
+                    Mono<Optional<Timezone>> tz = client.getDb().getTimezone(targetUser.getId().asBigInteger());
 
                     return tz.flatMap(tzr -> {
                         if(tzr.isEmpty()) {
@@ -122,7 +115,7 @@ public class CommandTime implements Command {
                             // TODO missing key handling
                             String msg = omsg.orElse("error.no_timezone_registered");
 
-                            return c.createMessage(msg).then(Mono.empty());
+                            return c.createMessage(msg).then();
                         } else {
                             Timezone tzi = tzr.get();
 
@@ -139,7 +132,7 @@ public class CommandTime implements Command {
                             // TODO missing key handling
                             String msg = omsg.orElse("command.time.time_for_user");
 
-                            return c.createMessage(msg).then(Mono.empty());
+                            return c.createMessage(msg).then();
                         }
                     });
                 } else {
@@ -150,7 +143,7 @@ public class CommandTime implements Command {
                         // TODO missing key handling
                         String msg = omsg.orElse("error.unknown_user");
 
-                        return c.createMessage(msg).then(Mono.empty());
+                        return c.createMessage(msg).then();
                     } else {
                         return Mono.empty();
                     }

@@ -3,6 +3,8 @@
 <properties>
     <entry key="command.ping.pong">Pong!</entry>
     <entry key="command.time.time_for_user">Time for {0}: {1}</entry>
+    <entry key="command.timezone.timezone">{0}''s registered timezone: {1}</entry>
+    <entry key="command.timezone.set.set">{0}: Your registered timezone is now {1}.</entry>
     <entry key="error.no_timezone_registered">{0} has not registered a timezone.</entry>
     <entry key="error.unknown_user">Could not find a user by searching for "{0}".</entry>
 </properties>

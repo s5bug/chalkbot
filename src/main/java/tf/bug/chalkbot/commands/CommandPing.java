@@ -32,18 +32,18 @@ public class CommandPing implements Command {
     }
 
     @Override
-    public Command getSubCommand(String subCommandName) {
+    public Command getSubCommand(String subCommandToken) {
         return null;
     }
 
     @Override
-    public <T> Mono<T> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
+    public Mono<Void> run(ChalkBotClient client, MessageCreateEvent mce, Locale userLocale, String arguments) {
         Optional<String> response = client.getLangKeyHandler().format(userLocale, "command.ping.pong");
 
         // TODO handle missing key errors
         String respText = response.orElse("command.ping.pong");
 
-        return mce.getMessage().getChannel().flatMap(c -> c.createMessage(respText)).then(Mono.empty());
+        return mce.getMessage().getChannel().flatMap(c -> c.createMessage(respText)).then();
     }
 
 }
