@@ -1,13 +1,14 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'org.mikeneck.graalvm-native-image' version '1.3.0'
 }
 
 group 'tf.bug'
 version '0.1.0'
 
 compileJava {
-    sourceCompatibility = 15
+    sourceCompatibility = 16
 }
 
 tasks.withType(JavaCompile).all {
@@ -29,7 +30,7 @@ repositories {
 dependencies {
     implementation 'com.discord4j:discord4j-core:3.1.5'
 
-    implementation 'org.slf4j:slf4j-simple:1.7.30'
+    implementation 'org.slf4j:slf4j-simple:2.0.0-alpha1'
 
     implementation 'io.r2dbc:r2dbc-spi:0.8.4.RELEASE'
     implementation 'io.r2dbc:r2dbc-postgresql:0.8.7.RELEASE'
@@ -44,6 +45,17 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+nativeImage {
+    graalVmHome = System.getProperty('java.home')
+    mainClass = 'tf.bug.chalkbot.ChalkBot'
+    executableName = 'chalkbot'
+    outputDirectory = file("$buildDir/bin")
+    arguments {
+        add '-J--enable-preview'
+        add '--initialize-at-build-time=org.slf4j.simple.SimpleLogger'
+    }
 }
 
 jar {
