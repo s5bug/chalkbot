@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tf.bug.chalkbot.ChalkBotClient;
 
+import java.time.format.FormatStyle;
 import java.util.*;
 
 public class CommandTime implements Command {
@@ -87,7 +88,7 @@ public class CommandTime implements Command {
                             Timezone tzi = tzr.get();
 
                             ChronoFormatter<Moment> f =
-                                ChronoFormatter.ofMomentStyle(DisplayMode.FULL, DisplayMode.FULL, userLocale, tzi.getID());
+                                ChronoFormatter.ofMomentStyle(FormatStyle.FULL, FormatStyle.FULL, userLocale, tzi.getID());
 
                             Moment now = Moment.nowInSystemTime();
 
@@ -120,7 +121,7 @@ public class CommandTime implements Command {
                             Timezone tzi = tzr.get();
 
                             ChronoFormatter<Moment> f =
-                                ChronoFormatter.ofMomentStyle(DisplayMode.FULL, DisplayMode.FULL, userLocale, tzi.getID());
+                                ChronoFormatter.ofMomentStyle(FormatStyle.FULL, FormatStyle.FULL, userLocale, tzi.getID());
 
                             Moment now = Moment.nowInSystemTime();
 
