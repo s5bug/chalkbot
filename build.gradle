@@ -39,7 +39,7 @@ dependencies {
     implementation 'net.time4j:time4j-sqlxml:5.9.1'
     implementation 'net.time4j:time4j-tzdata:5.0-2022f'
 
-    implementation 'net.iakovlev:timeshape:2021c.13'
+    implementation 'net.iakovlev:timeshape:2021c.14'
 
     implementation 'org.apache.commons:commons-text:1.10.0'
 
