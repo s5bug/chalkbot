@@ -34,7 +34,7 @@ dependencies {
 
     implementation("net.iakovlev:timeshape:2024a.25")
 
-    implementation("org.apache.commons:commons-text:1.13.0")
+    implementation("org.apache.commons:commons-text:1.13.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.12.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
