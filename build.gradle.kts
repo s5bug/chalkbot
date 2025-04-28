@@ -32,7 +32,7 @@ dependencies {
     implementation("net.time4j:time4j-sqlxml:5.9.4")
     implementation("net.time4j:time4j-tzdata:5.0-2025a")
 
-    implementation("net.iakovlev:timeshape:2024a.25")
+    implementation("net.iakovlev:timeshape:2025b.26")
 
     implementation("org.apache.commons:commons-text:1.13.1")
 
