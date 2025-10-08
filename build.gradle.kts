@@ -26,7 +26,7 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.17")
 
     implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
-    implementation("org.postgresql:r2dbc-postgresql:1.0.7.RELEASE")
+    implementation("org.postgresql:r2dbc-postgresql:1.1.0.RELEASE")
 
     implementation("net.time4j:time4j-base:5.9.4")
     implementation("net.time4j:time4j-sqlxml:5.9.4")
