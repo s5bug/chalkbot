@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.graalvm.buildtools.native") version "0.11.4"
+    id("org.graalvm.buildtools.native") version "1.0.0"
 }
 
 group = "tf.bug"
