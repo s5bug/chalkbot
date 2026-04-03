@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.discord4j:discord4j-core:3.3.0")
+    implementation("com.discord4j:discord4j-core:3.3.2")
 
     implementation("org.slf4j:slf4j-simple:2.0.17")
 
