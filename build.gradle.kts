@@ -36,7 +36,7 @@ dependencies {
 
     implementation("org.apache.commons:commons-text:1.15.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
