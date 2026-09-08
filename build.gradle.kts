@@ -23,7 +23,7 @@ repositories {
 dependencies {
     implementation("com.discord4j:discord4j-core:3.3.3")
 
-    implementation("org.slf4j:slf4j-simple:2.0.18")
+    implementation("org.slf4j:slf4j-simple:2.0.19")
 
     implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
     implementation("org.postgresql:r2dbc-postgresql:1.1.2.RELEASE")
